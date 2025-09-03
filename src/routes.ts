@@ -1,4 +1,5 @@
 import { alteraPesoZ71Routes } from "./routes/alteraPesoZ71Routes"
+import { delEtiquetaRoutes } from "./routes/delEtiquetaRoutes"
 import { delOpSeqRoutes } from "./routes/delOpSeqRoutes"
 import { delZ71Routes } from "./routes/delZ71Routes"
 import { getApImasRoutes } from "./routes/getApImasRoutes"
@@ -37,4 +38,5 @@ export const routes = async () => {
     app.register(getApImasRoutes);
     app.register(getLoteApontRoutes);
     app.register(getLote05Routes);
+    app.register(delEtiquetaRoutes);
 }

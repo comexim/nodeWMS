@@ -2,11 +2,11 @@ require("dotenv").config();
 
 const sql = require("mssql");
 
-const config = {
-    server: process.env.SERVER,
-    database: process.env.DATABASE,
-    user: process.env.USER,
-    password: process.env.PASSWORD,
+const configLocal = {
+    server: process.env.SERVERLOCAL,
+    database: process.env.DATABASELOCAL,
+    user: process.env.USERLOCAL,
+    password: process.env.PASSWORDLOCAL,
     options: {
         encrypt: false,
         trustServerCertificate: true,
@@ -15,10 +15,36 @@ const config = {
     }
 };
 
-export default async function getConnection() {
+const configNet = {
+    server: process.env.SERVERNET,
+    database: process.env.DATABASENET,
+    user: process.env.USERNET,
+    password: process.env.PASSWORDNET,
+    options: {
+        encrypt: false,
+        trustServerCertificate: true,
+        enableArithAbort: true,
+        instanceName: 'SQLEXPRESS'
+    }
+};
+
+export default async function getConnectionLocal() {
     try {
         console.log("Tentando conectar com SQL Server...");
-        const pool = await sql.connect(config);
+        const pool = await sql.connect(configLocal);
+        console.log("Conectado com sucesso!");
+        return pool; 
+    } catch(err: any) {
+        console.error("Erro de conexão:", err.message);
+        console.error("Código do erro:", err.code);
+        throw err; 
+    }
+}
+
+export async function getConnectionNet() {
+    try {
+        console.log("Tentando conectar com SQL Server...");
+        const pool = await sql.connect(configNet);
         console.log("Conectado com sucesso!");
         return pool; 
     } catch(err: any) {

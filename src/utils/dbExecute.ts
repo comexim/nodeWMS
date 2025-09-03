@@ -1,14 +1,29 @@
 import WMS_EnderecoDTO from "../models/WMS_EnderecoDTO";
 import WMS_ItemOSDTO from "../models/WMS_ItemOSDTO";
-import getConnection from "../database/database";
+import getConnectionLocal, { getConnectionNet } from "../database/database";
 import Retorno from "../models/Retorno";
 import WMS_OSDTO from "../models/WMS_OSDTO";
 import WMS_BagDTO from "../models/WMS_BagDTO";
 import TagValues from "../models/TagValues";
 import Silos from "../models/Silos";
 
-export async function executeQuery(sql: string, params?: Record<string, any>) {
-    const pool = await getConnection();
+export async function executeQueryLocal(sql: string, params?: Record<string, any>) {
+    const pool = await getConnectionLocal();
+    const request = pool.request();
+
+    if(params) {
+        Object.entries(params).forEach(([key, value]) => {
+            // Garantir que valores null/undefined sejam tratados adequadamente
+            const processedValue = value === null || value === undefined ? null : value;
+            request.input(key, processedValue);
+        })
+    }
+
+    return request.query(sql);
+}
+
+export async function executeQueryNet(sql: string, params?: Record<string, any>) {
+    const pool = await getConnectionNet();
     const request = pool.request();
 
     if(params) {
@@ -27,18 +42,18 @@ export async function checkExistOS(op: string): Promise<number> {
     
     if (op.length > 0) {
         sql = "SELECT ISNULL(Max(OSID),0) as chvOS FROM WMS_OS WHERE OSOpTck = @op";
-        const result = await executeQuery(sql, { op });
+        const result = await executeQueryLocal(sql, { op });
         return result.recordset[0].chvOS;
     } else {
         sql = "SELECT ISNULL(Max(OSID)+1,1) as chvOS FROM WMS_OS";
-        const result = await executeQuery(sql);
+        const result = await executeQueryLocal(sql);
         return result.recordset[0].chvOS;
     }
 }
 
 export async function getMaxItemOS(OSId: string): Promise<number> {
     const sql = "SELECT ISNULL(MAX(ItOSItem)+1,1) AS maxNum FROM WMS_ItemOS WHERE OSID = @OSId";
-    const result = await executeQuery(sql, { OSId });
+    const result = await executeQueryLocal(sql, { OSId });
     return result.recordset[0].maxNum;
 }
 
@@ -53,7 +68,7 @@ export async function getTag(codOuTag: string, tipo: string): Promise<TagValues>
         sql = "SELECT BagTag as tag, BagKgAtu as peso, BagTag, BagAtuEnder as ender, BagStatus as status, BagLote, '' AS tipo FROM WMS_Bag WHERE BagTag = @codOuTag";
     }
 
-    const result = await executeQuery(sql, { codOuTag });
+    const result = await executeQueryLocal(sql, { codOuTag });
 
     if (result.recordset.length === 0) {
         return new TagValues({ tagStatus: "NExist" });
@@ -66,7 +81,7 @@ export async function getEndereco(enderCod: string): Promise<WMS_EnderecoDTO> {
 
     let sql = "SELECT * FROM WMS_Endereco WHERE EnderCod = @enderCod";
 
-    const result = await executeQuery(sql, { enderCod });
+    const result = await executeQueryLocal(sql, { enderCod });
 
     if (result.recordset && result.recordset.length > 0) {
         for (const row of result.recordset) {
@@ -166,7 +181,7 @@ export async function getEnderDestinoParente(lote: string): Promise<WMS_Endereco
 
     sql += " ORDER BY EnderCod";
 
-    const result = await executeQuery(sql, { loteCort });
+    const result = await executeQueryLocal(sql, { loteCort });
 
     if (result.recordset && result.recordset.length > 0) {
         for (const row of result.recordset) {
@@ -190,7 +205,7 @@ export async function getEnderDestinoSugeridoParametro(sugeridoBloco: string): P
     sql += " AND EnderTipo <> 'EMBEG' ";
     sql += " AND EnderCod LIKE @sugeridoBloco ORDER BY EnderCod";
     
-    const result = await executeQuery(sql, { sugeridoBloco });
+    const result = await executeQueryLocal(sql, { sugeridoBloco });
 
     if (result.recordset && result.recordset.length > 0) {
         for (const row of result.recordset) {
@@ -214,7 +229,7 @@ export async function getEnderDestinoSugeridoTabela(inicialLote: string, peneira
     sql += " AND EnderBloco in (SELECT LoteBloco FROM WMS_LoteEnder WHERE LoteInicial = @inicialLote AND LotePeneira = @peneira";
     sql += " ORDER BY EnderCod";
     
-    const result = await executeQuery(sql, { inicialLote, peneira });
+    const result = await executeQueryLocal(sql, { inicialLote, peneira });
 
     if (result.recordset && result.recordset.length > 0) {
         for (const row of result.recordset) {
@@ -241,7 +256,7 @@ export async function getEnderDestinoMaisProximo(origem: string) {
     sql += "EnderBlocoOrigem = @origem ";
     sql += "ORDER BY EnderDistancia, EnderCod ";
 
-    const result = await executeQuery(sql, { origem });
+    const result = await executeQueryLocal(sql, { origem });
 
     if (result.recordset && result.recordset.length > 0) {
         for (const row of result.recordset) {
@@ -258,7 +273,7 @@ export async function getEnderDestinoMaisProximo(origem: string) {
 export async function setStatusEnder(endereco: string, status: string) {
     let sql = "UPDATE WMS_Endereco SET EnderStatus = @status WHERE EnderCod = @endereco";
 
-    const result = await executeQuery(sql, { endereco, status});
+    const result = await executeQueryLocal(sql, { endereco, status});
 
     return result;
 }
@@ -266,7 +281,7 @@ export async function setStatusEnder(endereco: string, status: string) {
 export async function buscaRecnoZ71(): Promise<number> {
     let sql = "SELECT MAX(R_E_C_N_O_)+1 AS recno FROM Z71010";
 
-    const result = await executeQuery(sql);
+    const result = await executeQueryLocal(sql);
     console.log("Valor Recno", result.recordset);
     
     const recno = result.recordset[0].recno;
@@ -277,7 +292,7 @@ export async function buscaProxLoteZ71(lote: string) {
     let sql = "SELECT ISNULL(MAX(Z71_LOTECT),0) AS LOTE FROM Z71010";
     sql += " WHERE Z71_LOTECT LIKE @lote"
 
-    const result = await executeQuery(sql, { lote });
+    const result = await executeQueryLocal(sql, { lote });
 
     let sequencia = result.recordset[0]?.LOTE || "00";
     let nSeq = 0;
@@ -302,7 +317,7 @@ export async function buscaSEQZ71(op: string, lote: string, data: string, opTck:
     let seq = 1;
     
     try{ 
-        const response = await executeQuery(sql, { op, lote, opTck });
+        const response = await executeQueryLocal(sql, { op, lote, opTck });
         
         if (response.recordset && response.recordset.length > 0) {
             seq = response.recordset[0].maxSeq || 1; 
@@ -361,7 +376,7 @@ export async function setWMSItemOS(wmsItem: WMS_ItemOSDTO): Promise <Retorno> {
     };
 
     try {
-        await executeQuery(sql, params);
+        await executeQueryLocal(sql, params);
         dto.code = 600;
         dto.type = "OK";
         dto.message = "Dado gravado com sucesso!";
@@ -416,7 +431,7 @@ export async function setWMSOS(wms: WMS_OSDTO) {
     };
 
     try {
-        await executeQuery(sql, params);
+        await executeQueryLocal(sql, params);
         dto.code = 600;
         dto.type = "OK";
         dto.message = "Dado gravado com sucesso!";
@@ -438,7 +453,7 @@ export async function existWMSBag(id: string, status: string) {
         sql += " AND BagStatus = @status";
     }
 
-    const result = await executeQuery(sql, { id , status });
+    const result = await executeQueryLocal(sql, { id , status });
 
     return result.recordset.length > 0;
 }
@@ -490,7 +505,7 @@ export async function insWMSBag(id: string, lote: string, status: string, atuEnd
         sacas: peso/59
     }
 
-    await executeQuery(sql, params);
+    await executeQueryLocal(sql, params);
 }
 
 export async function updWMSBag(id: string, lote: string, status: string, atuEnder: string, ultEnder: string, peso: number): Promise<void> {
@@ -506,7 +521,7 @@ export async function updWMSBag(id: string, lote: string, status: string, atuEnd
         sacas: peso/59
     }
 
-    await executeQuery(sql, params);
+    await executeQueryLocal(sql, params);
 }
 
 export async function setStatusOPSeq(seqOPID: number, status: string): Promise<void> {
@@ -517,13 +532,13 @@ export async function setStatusOPSeq(seqOPID: number, status: string): Promise<v
         status: status
     }
 
-    await executeQuery(sql, params);
+    await executeQueryLocal(sql, params);
 }
 
 export async function getMaxMovEnderID(): Promise<string> {
     let sql = `SELECT MAX(MovEnderID)+1 AS maxNum FROM WMS_MovEnder `;
 
-    const result = await executeQuery(sql);
+    const result = await executeQueryLocal(sql);
     return result.recordset[0]?.maxNum;
 }
 
@@ -538,7 +553,7 @@ export async function getBag(_BagTag: string): Promise<WMS_BagDTO> {
         FROM WMS_Bag 
         WHERE BagTag = @bagTag`
 
-    const result = await executeQuery(sql, { bagTag: _BagTag});
+    const result = await executeQueryLocal(sql, { bagTag: _BagTag});
 
     if (result.recordset && result.recordset.length > 0) {
         const row = result.recordset[0];
@@ -583,7 +598,7 @@ export async function updSiloSaldo(_SiloDto: Silos[],_Quant: number,_ES: string,
       siloCod: silo.siloCod
     };
 
-    await executeQuery(sql, params);
+    await executeQueryLocal(sql, params);
   }
 }
 
@@ -600,7 +615,7 @@ export async function getSilo(_SiloCod: string) {
     }
 
     const params = _SiloCod !== "Todos" && _SiloCod !== "APP" ? { siloCod: _SiloCod }: {};
-    const result = await executeQuery(sql, params);
+    const result = await executeQueryLocal(sql, params);
 
     const lst: Silos[] = result.recordset.map((row: any) => ({
         siloCod: row.SiloCod,
@@ -620,7 +635,7 @@ export async function getSilo(_SiloCod: string) {
 
 export async function getMovSiloID() {
     const sql = `SELECT MAX(MovSiloID)+1 AS MAX FROM SUP_MovSilo`;
-    const max = await executeQuery(sql);
+    const max = await executeQueryLocal(sql);
     return max.recordset[0].MAX.toString();
 }
 
@@ -656,7 +671,7 @@ export async function getTotEnderDisp(_Bloco: string, _Quadra: string, _Posicao:
     }
 
     try {
-        const result = await executeQuery(sql, {_Bloco, _Quadra, _Posicao});
+        const result = await executeQueryLocal(sql, {_Bloco, _Quadra, _Posicao});
         iDisp = result.recordset[0]?.TOTDISP;
         return new Retorno ({
             code: 600,
