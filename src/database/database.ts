@@ -23,17 +23,19 @@ const configNet = {
     options: {
         encrypt: false,
         trustServerCertificate: true,
-        enableArithAbort: true,
-        instanceName: 'SQLEXPRESS'
+        enableArithAbort: true
     }
 };
 
-export default async function getConnectionLocal() {
+let poolLocal:any=null
+let poolNet:any=null
+
+export async function getConnectionLocal() {
     try {
         console.log("Tentando conectar com SQL Server...");
-        const pool = await sql.connect(configLocal);
+        poolLocal = await sql.connect(configLocal);
         console.log("Conectado com sucesso!");
-        return pool; 
+        return poolLocal; 
     } catch(err: any) {
         console.error("Erro de conexão:", err.message);
         console.error("Código do erro:", err.code);
@@ -44,9 +46,9 @@ export default async function getConnectionLocal() {
 export async function getConnectionNet() {
     try {
         console.log("Tentando conectar com SQL Server...");
-        const pool = await sql.connect(configNet);
+        poolNet = await sql.connect(configNet);
         console.log("Conectado com sucesso!");
-        return pool; 
+        return poolNet; 
     } catch(err: any) {
         console.error("Erro de conexão:", err.message);
         console.error("Código do erro:", err.code);

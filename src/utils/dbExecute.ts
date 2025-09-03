@@ -1,11 +1,11 @@
 import WMS_EnderecoDTO from "../models/WMS_EnderecoDTO";
 import WMS_ItemOSDTO from "../models/WMS_ItemOSDTO";
-import getConnectionLocal, { getConnectionNet } from "../database/database";
 import Retorno from "../models/Retorno";
 import WMS_OSDTO from "../models/WMS_OSDTO";
 import WMS_BagDTO from "../models/WMS_BagDTO";
 import TagValues from "../models/TagValues";
 import Silos from "../models/Silos";
+import { getConnectionLocal, getConnectionNet } from "../database/database";
 
 export async function executeQueryLocal(sql: string, params?: Record<string, any>) {
     const pool = await getConnectionLocal();

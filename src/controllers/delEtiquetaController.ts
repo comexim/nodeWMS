@@ -10,5 +10,5 @@ export async function delEtiquetaController(req:FastifyRequest,reply:FastifyRepl
     }
 
     const result = await delEtiqueta(bagTag, bagLote)
-    
+    return result
 }
