@@ -32,26 +32,36 @@ let poolNet:any=null
 
 export async function getConnectionLocal() {
     try {
-        console.log("Tentando conectar com SQL Server...");
-        poolLocal = await sql.connect(configLocal);
-        console.log("Conectado com sucesso!");
-        return poolLocal; 
+        if (!poolLocal) {
+            console.log("Criando pool Local...");
+            poolLocal = new sql.ConnectionPool(configLocal);
+            await poolLocal.connect();
+            console.log("Pool Local conectado!");
+        }
+        return poolLocal;
     } catch(err: any) {
-        console.error("Erro de conexão:", err.message);
-        console.error("Código do erro:", err.code);
-        throw err; 
+        console.error("Erro conexão Local:", err.message);
+        throw err;
     }
 }
 
 export async function getConnectionNet() {
     try {
-        console.log("Tentando conectar com SQL Server...");
-        poolNet = await sql.connect(configNet);
-        console.log("Conectado com sucesso!");
-        return poolNet; 
+        if (!poolNet) {
+            console.log("Criando pool Net...");
+            poolNet = new sql.ConnectionPool(configNet);
+            await poolNet.connect();
+            console.log("Pool Net conectado!");
+        }
+        return poolNet;
     } catch(err: any) {
-        console.error("Erro de conexão:", err.message);
-        console.error("Código do erro:", err.code);
+        console.error("Erro conexão Net:", err.message);
         throw err; 
     }
+}
+
+// Função para fechar pools quando necessário
+export async function closeConnections() {
+    if (poolLocal) await poolLocal.close();
+    if (poolNet) await poolNet.close();
 }
