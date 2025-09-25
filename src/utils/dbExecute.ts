@@ -1,10 +1,10 @@
-import WMS_EnderecoDTO from "../models/WMS_EnderecoDTO";
-import WMS_ItemOSDTO from "../models/WMS_ItemOSDTO";
-import Retorno from "../models/Retorno";
-import WMS_OSDTO from "../models/WMS_OSDTO";
-import WMS_BagDTO from "../models/WMS_BagDTO";
-import TagValues from "../models/TagValues";
-import Silos from "../models/Silos";
+import WMS_EnderecoDTO from "../models/automacao/WMS_EnderecoDTO";
+import WMS_ItemOSDTO from "../models/automacao/WMS_ItemOSDTO";
+import Retorno from "../models/automacao/Retorno";
+import WMS_OSDTO from "../models/automacao/WMS_OSDTO";
+import WMS_BagDTO from "../models/automacao/WMS_BagDTO";
+import TagValues from "../models/automacao/TagValues";
+import Silos from "../models/automacao/Silos";
 import { getConnectionLocal, getConnectionNet } from "../database/database";
 
 export async function executeQueryLocal(sql: string, params?: Record<string, any>) {

@@ -1,5 +1,5 @@
-import { FastifyInstance, FastifyRequest, FastifyReply, RouteShorthandOptions } from "fastify";
-import { authToken } from "../middlewares/authTokenValidation";
+import { FastifyInstance, FastifyRequest, FastifyReply, RouteShorthandOptions, preHandlerHookHandler } from "fastify";
+import { authToken } from "../middlewares/automacao/authTokenValidation";
 
 export function createRoute(
     app: FastifyInstance,
@@ -7,10 +7,11 @@ export function createRoute(
     path: string,
     handler: (req: FastifyRequest, reply: FastifyReply) => Promise<any>,
     swaggerOptions?: RouteShorthandOptions,
-    requireAuth: boolean = true
+    requireAuth: boolean = true,
+    authMiddleware: preHandlerHookHandler = authToken
 ) {
     const options: RouteShorthandOptions = {
-        ...(requireAuth && { preHandler: authToken }),
+        ...(requireAuth && { preHandler: authMiddleware }),
         ...swaggerOptions
     } 
 

@@ -1,6 +1,6 @@
-import WMS_SeqOpDTO from "../models/WMS_SeqOpDTO";
-import Z71DTO from "../models/Z71DTO";
-import WMS_ApImasDTO from "../models/WMS_ApImasDTO";
+import WMS_SeqOpDTO from "../models/automacao/WMS_SeqOpDTO";
+import Z71DTO from "../models/automacao/Z71DTO";
+import WMS_ApImasDTO from "../models/automacao/WMS_ApImasDTO";
 import { generateSchemaFromDTO } from "./schemas";
 
 export const Z71Schema = generateSchemaFromDTO(Z71DTO);
