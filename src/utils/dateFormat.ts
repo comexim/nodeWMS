@@ -24,3 +24,8 @@ export function formatDate(date: string, format: "dma" | "amd"): string {
         throw new Error("Formato inválido");
     }
 }
+
+export function formatNumberToBrazil(value: number): string {
+    const numberValue = typeof value === "string" ? parseFloat(value) : value;
+    return numberValue.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2});
+}

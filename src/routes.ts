@@ -17,9 +17,7 @@ import { setApImasRoutes } from "./routes/automacao/setApImasRoutes"
 import { setOpSeqRoutes } from "./routes/automacao/setOpSeqRoutes"
 import { z71Routes } from "./routes/automacao/setZ71Routes"
 import { updOpSeqRoutes } from "./routes/automacao/updOpSeqRoutes"
-//======================================================================
-import { getTokenProtheusRoutes } from "./routes/protheus/getTokenProtheusRoutes"
-import { getContasPagasProtheusRoutes } from "./routes/protheus/getContasPagasProtheusRoutes"
+import { setSiloSaldoRoutes } from "./routes/automacao/setSiloSaldoRoutes"
 
 import { app } from "./server"
 
@@ -43,7 +41,5 @@ export const routes = async () => {
     app.register(getLoteApontRoutes);
     app.register(getLote05Routes);
     app.register(delEtiquetaRoutes);
-//======================================
-    app.register(getTokenProtheusRoutes);
-    app.register(getContasPagasProtheusRoutes);
+    app.register(setSiloSaldoRoutes);
 }

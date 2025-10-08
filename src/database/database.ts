@@ -3,7 +3,8 @@ require("dotenv").config();
 const sql = require("mssql");
 
 const configLocal = {
-    server: process.env.SERVERLOCAL?.replace('\\SQLEXPRESS', ''),
+    server: process.env.SERVERLOCAL?.split('\\')[0], 
+    port: 1433, 
     database: process.env.DATABASELOCAL,
     user: process.env.USERLOCAL,
     password: process.env.PASSWORDLOCAL,
