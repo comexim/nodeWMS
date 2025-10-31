@@ -4,25 +4,25 @@ import jwt from "jsonwebtoken"
 
 export async function getToken(dados: any): Promise<Usuario | Retorno> {
     try {
-            const USERS = [{ username: process.env.LOGIN, password: process.env.SENHA}]
-            const login = dados.username;
-            const senha = dados.password; 
+        const USERS = [{ login: process.env.LOGIN, senha: process.env.SENHA}]
+        const login = dados.login;
+        const senha = dados.senha; 
+        const user = USERS.find(u => u.login === login && u.senha === senha);
+        if(!user) return new Retorno({ message: "Não autorizado!" });
 
-            const user = USERS.find(u => u.username === login && u.password === senha);
-            if(!user) return new Retorno({ message: "Não autorizado!" });
+        const token = jwt.sign({ username: user.login }, process.env.JWT_SECRET as string, {expiresIn: '360h'});
 
-            const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET as string, {expiresIn: '360h'});
-
-            return new Usuario({
-                login: dados.username,
-                senha: "",
-                token: token
-            });
+        return new Usuario({
+            login: dados.login,
+            senha: "",
+            token: token
+        });
     } catch (error) {
-            return new Retorno({
-                code: 500,
-                type: "",
-                message: ""
-            });
+        console.log("Erro na autenticação:", error);
+        return new Retorno({
+            code: 500,
+            type: "",
+            message: ""
+        });
     }
 }

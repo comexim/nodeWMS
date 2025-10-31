@@ -1,4 +1,5 @@
 import Z1D from "./Z1D";
+import Z1C from "./Z1C";
 
 export default class Z1A {
     recno: number = 0;
@@ -44,7 +45,7 @@ export default class Z1A {
     txPerf: string = "";
     codJus: string = "";
     chkLst: Z1D[] = [];
-    private List<Z1C> notas;
+    notas: Z1C[] = [];
 
     constructor(data?: Partial<Z1A>) {
         if (data) {
@@ -52,13 +53,7 @@ export default class Z1A {
         }
     }
 
-    // Método para criar a partir de dados (útil para banco/API)
     static from(data: any): Z1A {
         return new Z1A(data);
-    }
-
-    // Método para limpar os dados
-    clear(): void {
-        this.code = 0;
     }
 }

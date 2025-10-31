@@ -6,6 +6,7 @@ import WMS_BagDTO from "../models/automacao/WMS_BagDTO";
 import TagValues from "../models/automacao/TagValues";
 import Silos from "../models/automacao/Silos";
 import { getConnectionLocal, getConnectionNet } from "../database/database";
+import Labels from "../models/automacao/Labels";
 
 export async function executeQueryLocal(sql: string, params?: Record<string, any>) {
     const pool = await getConnectionLocal();
@@ -686,6 +687,26 @@ export async function getTotEnderDisp(_Bloco: string, _Quadra: string, _Posicao:
             data: iDisp,
             message: `Não foram encontrados lotes disponíveis!`
         })
+    }
+}
+
+export async function getGridCollum(grid: string, user: string): Promise<Labels[]> {
+    try {
+        const sql = `SELECT * FROM Cmx_Grid WHERE GridID = @grid AND UserLogin = @user ORDER BY GridNdx`;
+
+        const result = await executeQueryLocal(sql, { grid, user });
+
+        const listLabels: Labels [] = result.recordset.map((row: any) => {
+            const label = new Labels();
+            label.label = row.GridLabel?.trim() || "";
+            label.key = row.GridData?.trim() || "";
+            label.exibe = row.GridExibe?.trim() || "";
+            return label;
+        });
+        return listLabels;
+    } catch (error) {
+            console.error("Erro ao buscar colunas do grid:", error);
+            return [];
     }
 }
 

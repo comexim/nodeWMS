@@ -14,10 +14,10 @@ export const schemas = {
     
     TokenSchema: {
         type: 'object',
-        required: ['username', 'password'],
+        required: ['login', 'senha'],
         properties: {
-            username: { type: 'string', example: 'string' },
-            password: { type: 'string', example: 'string' }
+            login: { type: 'string', example: 'string' },
+            senha: { type: 'string', example: 'string' }
         }
     }
 };

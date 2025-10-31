@@ -18,6 +18,9 @@ import { setOpSeqRoutes } from "./routes/automacao/setOpSeqRoutes"
 import { z71Routes } from "./routes/automacao/setZ71Routes"
 import { updOpSeqRoutes } from "./routes/automacao/updOpSeqRoutes"
 import { setSiloSaldoRoutes } from "./routes/automacao/setSiloSaldoRoutes"
+import { getTempoMotoristaRoutes } from "./routes/automacao/getTempoMotoristaRoutes"
+import { getMotoristaRoutes } from "./routes/automacao/getMotoristaRoutes"
+import { getProdParadaRoutes } from "./routes/automacao/getProdParadaRoutes"
 
 import { app } from "./server"
 
@@ -42,4 +45,7 @@ export const routes = async () => {
     app.register(getLote05Routes);
     app.register(delEtiquetaRoutes);
     app.register(setSiloSaldoRoutes);
+    app.register(getTempoMotoristaRoutes);
+    app.register(getMotoristaRoutes);
+    app.register(getProdParadaRoutes);
 }
