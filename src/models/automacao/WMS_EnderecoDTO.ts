@@ -19,7 +19,7 @@ export default class WMS_EnderecoDTO {
     linha: string = "";
     pen17: string = "";
     pen14: string = "";
-    pVA: string = "";
+    pva: string = "";
     grinder: string = "";
     impureza: string = "";
     safra: string = "";

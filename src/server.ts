@@ -41,7 +41,7 @@ app.register(require('@fastify/swagger-ui'), {
 app.register(routes);
 
 // @ts-ignore
-app.listen({ port: parseInt(process.env.PORT || '3000'), host: '192.168.1.4' }, (err, address) => {
+app.listen({ port: parseInt(process.env.PORT || '3000'), host: '0.0.0.0' }, (err, address) => {
     if(err) {
         console.log(err);
         process.exit(1);

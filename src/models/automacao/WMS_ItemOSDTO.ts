@@ -36,9 +36,4 @@ export default class WMS_ItemOSDTO {
     static from(data: any): WMS_ItemOSDTO {
         return new WMS_ItemOSDTO(data);
     }
-
-    // Método para limpar os dados
-    clear(): void {
-        this.oSID = "";
-    }
 }

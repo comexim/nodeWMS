@@ -21,6 +21,9 @@ import { setSiloSaldoRoutes } from "./routes/automacao/setSiloSaldoRoutes"
 import { getTempoMotoristaRoutes } from "./routes/automacao/getTempoMotoristaRoutes"
 import { getMotoristaRoutes } from "./routes/automacao/getMotoristaRoutes"
 import { getProdParadaRoutes } from "./routes/automacao/getProdParadaRoutes"
+import { getEmpilhadeiraRoutes } from "./routes/automacao/getEmpilhadeiraRoutes"
+import { getEnderColorRoutes } from "./routes/automacao/getEnderColorRoutes"
+import { getListaEnderecoRoutes } from "./routes/automacao/getListaEnderecoRoutes"
 
 import { app } from "./server"
 
@@ -48,4 +51,7 @@ export const routes = async () => {
     app.register(getTempoMotoristaRoutes);
     app.register(getMotoristaRoutes);
     app.register(getProdParadaRoutes);
+    app.register(getEmpilhadeiraRoutes);
+    app.register(getEnderColorRoutes);
+    app.register(getListaEnderecoRoutes);
 }

@@ -7,6 +7,7 @@ import TagValues from "../models/automacao/TagValues";
 import Silos from "../models/automacao/Silos";
 import { getConnectionLocal, getConnectionNet } from "../database/database";
 import Labels from "../models/automacao/Labels";
+import SD4_DTO from "../models/automacao/SD4_DTO";
 
 export async function executeQueryLocal(sql: string, params?: Record<string, any>) {
     const pool = await getConnectionLocal();
@@ -707,6 +708,53 @@ export async function getGridCollum(grid: string, user: string): Promise<Labels[
     } catch (error) {
             console.error("Erro ao buscar colunas do grid:", error);
             return [];
+    }
+}
+
+export async function getListaEmpenhoOS(op: string) {
+    const sql = `SELECT ItOsTagBag FROM WMS_OS os, WMS_ItemOS item 
+                    WHERE os.OSID = item.OSID
+                    AND ItOSStatus = 'AB'
+                    AND OSOptck = @op`;
+    try {
+        const response = await executeQueryLocal(sql);
+
+        const listaSD4: SD4_DTO[] = response.recordset.map((item: any) => {
+            const sd4Dto = new SD4_DTO();
+            sd4Dto.lote = item.ItOsTagBag;
+            return listaSD4;
+        })
+
+        return listaSD4;
+    } catch (error) {
+        return new Retorno ({
+            code: 500,
+            message: `Erro interno (getListaEmpenho): ${error}`
+        })
+    }
+}
+
+export async function getEmpenhoLote(lote: string): Promise<string[]> {
+    const ret: string[] = ["Não", "0", ""];
+
+    const sql = `SELECT TOP 1 ItOsPeso, OSOpTck 
+                 FROM WMS_OS OS, WMS_ItemOS Item 
+                 WHERE OS.OSID = Item.OSID 
+                 AND ItOsStatus = 'AB' 
+                 AND ItOSLote = @lote`;
+
+    try {
+        const result = await executeQueryLocal(sql, { lote });
+
+        if (result.recordset && result.recordset.length > 0) {
+            const row = result.recordset[0];
+            return ["Sim", row.ItOsPeso?.toString() || "0", row.OSOpTck || ""];
+        }
+
+        return ret;
+    } catch (error) {
+        console.error("Erro ao buscar empenho do lote:", error);
+        return ret;
     }
 }
 

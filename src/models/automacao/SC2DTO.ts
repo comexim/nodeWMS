@@ -18,9 +18,4 @@ export default class SC2DTO {
     static from(data: any): SC2DTO {
         return new SC2DTO(data);
     }
-
-    // Método para limpar os dados
-    clear(): void {
-        this.rec = 0;
-    }
 }
