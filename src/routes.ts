@@ -24,6 +24,7 @@ import { getProdParadaRoutes } from "./routes/automacao/getProdParadaRoutes"
 import { getEmpilhadeiraRoutes } from "./routes/automacao/getEmpilhadeiraRoutes"
 import { getEnderColorRoutes } from "./routes/automacao/getEnderColorRoutes"
 import { getListaEnderecoRoutes } from "./routes/automacao/getListaEnderecoRoutes"
+import { getListaMoegasRoutes } from "./routes/automacao/getListaMoegasRoutes"
 
 import { app } from "./server"
 
@@ -54,4 +55,5 @@ export const routes = async () => {
     app.register(getEmpilhadeiraRoutes);
     app.register(getEnderColorRoutes);
     app.register(getListaEnderecoRoutes);
+    app.register(getListaMoegasRoutes);
 }
