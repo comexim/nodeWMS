@@ -22,9 +22,4 @@ export default class WMS_MovEnderDTO {
     static from(data: any): WMS_MovEnderDTO {
         return new WMS_MovEnderDTO(data);
     }
-
-    // Método para limpar os dados
-    clear(): void {
-        this.oSID = "";
-    }
 }

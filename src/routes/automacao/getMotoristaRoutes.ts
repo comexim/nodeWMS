@@ -3,5 +3,5 @@ import { getMotoristaController } from "../../controllers/automacao/getMotorista
 import { createRoute } from "../../utils/routerHelper";
 
 export async function getMotoristaRoutes (app: FastifyInstance) {
-    createRoute(app, "get", "/api_wms/getMotorista", getMotoristaController);
+    createRoute(app, "get", "/api_wms/getMotorista", getMotoristaController, {},false);
 }

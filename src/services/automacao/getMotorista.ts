@@ -2,6 +2,20 @@ import { executeQueryLocal } from "../../utils/dbExecute";
 
 export async function getMotorista (login: string, senha: string) {
     try {
+        // Validação dos parâmetros de entrada
+        if (!login || !senha) {
+            console.warn('[getMotorista] Login ou senha não fornecidos');
+            return {
+                code: 400,
+                type: "Error",
+                message: "Login e senha são obrigatórios!",
+                data: "false",
+                direitos: null,
+                recno: null,
+                retorno: null
+            };
+        }
+
         const sql = `SELECT MotCod, MotAdm, MotDelEtq, MotDirOS, MotDirOsMoe, 
                             MotDirImas, MotDirSilo, MotDirRem
                         FROM WMS_Motorista
@@ -18,6 +32,7 @@ export async function getMotorista (login: string, senha: string) {
             const motorista = result.recordset[0];
             
             const direitos = {
+                MotAdm: motorista.MotAdm || 'N',
                 MotDelEtq: motorista.MotDelEtq || 'N',
                 MotDirOS: motorista.MotDirOS || 'N',
                 MotDirOsMoe: motorista.MotDirOsMoe || 'N',

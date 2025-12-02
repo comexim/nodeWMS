@@ -25,6 +25,13 @@ import { getEmpilhadeiraRoutes } from "./routes/automacao/getEmpilhadeiraRoutes"
 import { getEnderColorRoutes } from "./routes/automacao/getEnderColorRoutes"
 import { getListaEnderecoRoutes } from "./routes/automacao/getListaEnderecoRoutes"
 import { getListaMoegasRoutes } from "./routes/automacao/getListaMoegasRoutes"
+import { getOrdemEnderRoutes } from "./routes/automacao/getOrdemEnderRoutes"
+import { getOSMoegaRoutes } from "./routes/automacao/getOSMoegaRoutes"
+import { getSiloAppRoutes } from "./routes/automacao/getSiloAPPRoutes" 
+import { getZ1AJustifRoutes } from "./routes/automacao/getZ1AJustifRoutes"
+import { getCordCorRoutes } from "./routes/automacao/getCordCorRoutes"
+import { setCordCorRoutes } from "./routes/automacao/setCordCorRoutes"
+import { getSiloWMSSUPRoutes } from "./routes/automacao/getSiloWMSSUP"
 
 import { app } from "./server"
 
@@ -56,4 +63,11 @@ export const routes = async () => {
     app.register(getEnderColorRoutes);
     app.register(getListaEnderecoRoutes);
     app.register(getListaMoegasRoutes);
+    app.register(getOrdemEnderRoutes);
+    app.register(getOSMoegaRoutes);
+    app.register(getSiloAppRoutes);
+    app.register(getZ1AJustifRoutes);
+    app.register(getCordCorRoutes);
+    app.register(setCordCorRoutes);
+    app.register(getSiloWMSSUPRoutes);
 }

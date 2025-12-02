@@ -1,7 +1,7 @@
 export default class Silos {
     siloCod = "";
     siloDescr = "";
-    SiloSetor = "";
+    siloSetor = "";
     siloLote = "";
     siloPercOcup = "";
     siloCapac = "";

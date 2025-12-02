@@ -758,6 +758,451 @@ export async function getEmpenhoLote(lote: string): Promise<string[]> {
     }
 }
 
+export async function getWMS_OPMoega(op: string, tipo: string): Promise<string> {
+    let cCampo = "";
+
+    if(tipo === "Ender") {
+        cCampo = "EnderCod";    
+    } else {
+        cCampo = "EnderTag";
+    }
+
+    const sql = `SELECT ${cCampo} FROM WMS_OPMoega WHERE OpNum = @op`;
+    try {
+        const result = await executeQueryLocal(sql, { op });
+
+        let conteudo = result.recordset.map((item: any) => item[cCampo].trim()).join(";");
+
+        return conteudo;
+    } catch (error) {
+        console.error("Erro ao buscar WMS_OPMoega:", error);
+        return "";
+    }
+}
+
+export async function getItemOSOPAberto (op: string): Promise<string> { 
+    const sql = `SELECT ItOSItem FROM WMS_OS Cab, WMS_ItemOS Item WHERE Cab.OSID=Item.OSID AND ItOsStatus IN ('AB','ET') AND OSOpTck = @op`
+    try {
+        const response = await executeQueryLocal(sql, { op });
+
+        return response;
+    } catch (error) {
+        console.error("Erro ao buscar getItemOSOPAberto:", error);
+        return "";
+    }
+}
+
+export async function getsd4 (op: string) {
+    //Buscar os empenhos da OP
+    const sql = `SELECT D4_OP AS OP, D4_LOCAL AS LOCAL, D4_LOTECTL AS LOTE, D4_QUANT AS PESO, D4_QTDEORI AS PESOORI FROM SD4010 WHERE D_E_L_E_T_<>'*' AND D4_COD = '00100' AND D4_FILIAL = '05' AND SUBSTRING(D4_OP,1,6) = @op
+                UNION
+                SELECT Z45_OP AS OP, '01' AS LOCAL, Z45_LOTWMS AS LOTE, Z45_PESO AS PESO, Z45_PESO AS PESOORI FROM Z45010 WHERE D_E_L_E_T_<>'*' AND Z45_LOTWMS <> '' AND Z45_FILIAL = '05' AND SUBSTRING(Z45_OP,1,6) = @op ORDER BY 3`;
+
+    try {
+        const response = await executeQueryLocal(sql, { op });
+
+        const listaSD4 = response.recordset.map((item: any) => {
+            let sd4Dto = new SD4_DTO();
+            sd4Dto.local = item.LOCAL;
+            sd4Dto.lote = item.LOTE;
+            sd4Dto.qtdori = item.PESOORI;
+            sd4Dto.quant = item.PESO;
+            return sd4Dto;
+        })
+
+        return listaSD4;
+    } catch (error) {
+        console.error("Erro ao buscar getItemOSOPAberto:", error);
+        return "";
+    }
+}
+
+export async function setInsWMSOS (wms: WMS_OSDTO): Promise<Retorno> {
+    let chvOS = await checkExistOS("");
+    if(wms.oSID.length === 0) {
+        wms.oSID = chvOS.toString();
+    }
+
+    const sql = `INSERT INTO WMS_OS (OSID, MotCod, OSOpTck, OSPrioridade, OSBlocoSuger, OSData, OSHora, OSStatus) VALUES(@OSID,@MotCod,@OSOpTck,@OSPrioridade,@OSBlocoSuger,@OSData,@OSHora,@OSStatus)`;
+
+    const params = {
+        OSID: wms.oSID,
+        MotCod: wms.motCod,
+        OSOpTck: wms.oSOpTck,
+        OSPrioridade: wms.oSPrioridade,
+        OSBlocoSuger: wms.oSBlocoSuger,
+        OSData: wms.oSData,
+        OSHora: wms.oSHora,
+        OSStatus: wms.oSStatus
+    }
+    try {
+        await executeQueryLocal(sql, { params });  
+        
+        return new Retorno ({
+            code: 600,
+            type: "OK",
+            message: "Dado gravado com sucesso!",
+            data: chvOS.toString()
+        })
+    } catch (error) {
+        return new Retorno ({
+            code: 500,
+            type: "Error",
+            message: "Dado não gravado, contate o administrador (setInsWMSOS)"
+        })
+    }
+}
+
+export async function getListaBagSD4 (lote: string): Promise<WMS_BagDTO[] | string> {
+    const sql = `SELECT BagTag, BagLote, BagStatus, BagAtuEnder, BagUltEnder, BagKgAtu FROM WMS_Bag
+                WHERE BagLote = @lote
+                AND BagTag NOT IN (SELECT ItOsTagBag FROM WMS_ItemOS WHERE ItOSStatus = 'AB' AND ItOsTagBag = BagTag)
+                ORDER BY BagAtuEnder DESC`;
+
+    try {
+        const response = await executeQueryLocal(sql, { lote });
+
+        const listBag = response.recordset.map((item: any) => {
+            let dto = new WMS_BagDTO();
+            dto.bagTag = item.BagTag;
+            dto.bagLote = item.BagLote;
+            dto.bagStatus = item.BagStatus;
+            dto.bagAtuEnder = item.BagAtuEnder;
+            dto.bagUltEnder = item.BagUltEnder;
+            dto.bagKgAtu = item.BagKgAtu;
+            dto.bagKgCorte = 0;
+            return dto;
+        })
+
+        return listBag;
+    } catch (error) {
+        console.error("Erro ao buscar getListaBagSD4:", error);
+        return "";
+    }
+}
+
+export async function insWMS_OPMoega (opNum: string, enderCod: string, enderTag: string) {
+    const sqlDel = `DELETE FROM WMS_OPMoega WHERE OpNum = @opNum AND EnderTag = @enderTag AND EnderCod = @enderCod`
+    const sqlIns = `INSERT INTO WMS_OPMoega (OpNum, EnderTag, EnderCod) VALUES(@opNum,@enderTag,@enderCod)`;
+    try {
+        await executeQueryLocal(sqlDel);
+        await executeQueryLocal(sqlIns);
+    } catch (error) {
+        console.error("Erro ao inserir insWMS_OPMega:", error);
+        return "";
+    }
+}
+
+export async function setInsWMSItemOS (wmsItem: WMS_ItemOSDTO) {
+    let chvItemOS = getMaxItemOS(wmsItem.oSID);
+    let enderDestino = new WMS_EnderecoDTO();
+
+    if(wmsItem.itOSItem.length === 0) { //Se a chave estiver vazia no objeto, usar a chave encontrada na função getMaxItemOS
+        wmsItem.itOSItem = chvItemOS.toString();
+    }
+
+    if(wmsItem.itOsDestino.length > 0 && wmsItem.itOsDestino.length <= 3){//Passando apenas bloco e quadra '100A'
+        //Buscando o endereço de destino dos lotes
+        //enderDestino = await getEnderDisp("","",wmsItem.itOsDestino, "")!;
+    } 
+
+}
+
+//==================================================================================================================
+// FUNÇÕES DE ANÁLISE DE INTERSEÇÕES GEOGRÁFICAS
+//==================================================================================================================
+
+const booleanIntersects = require('@turf/boolean-intersects').default;
+const bbox = require('@turf/bbox').default;
+const area = require('@turf/area').default;
+const buffer = require('@turf/buffer').default;
+const { polygon, multiPolygon } = require('@turf/helpers');
+const jsts = require('jsts');
+
+/**
+ * Fragmenta um MultiPolygon em múltiplos Polygons simples
+ */
+export function polygonsFromFeature(feat: any) {
+    const geom = feat.geometry;
+    if (geom.type === 'Polygon') return [polygon(geom.coordinates, feat.properties)];
+    if (geom.type === 'MultiPolygon') {
+        return geom.coordinates.map((coords: any) => polygon(coords, feat.properties));
+    }
+    return [];
+}
+
+/**
+ * Limpa geometrias inválidas aplicando buffer zero
+ */
+export function cleanGeometry(feat: any) {
+    try {
+        return buffer(feat, 0, { units: 'meters' });
+    } catch (err) {
+        return feat;
+    }
+}
+
+/**
+ * Converte Feature GeoJSON para geometria JSTS
+ */
+export function toJSTS(geojson: any) {
+    if (!geojson) return null;
+    try {
+        const geoReader = new jsts.io.GeoJSONReader();
+        const jgeom = geoReader.read(geojson);
+        return jgeom;
+    } catch (err) {
+        return null;
+    }
+}
+
+/**
+ * Converte geometria JSTS para Feature GeoJSON
+ */
+export function fromJSTS(jgeom: any) {
+    if (!jgeom) return null;
+    try {
+        const geoWriter = new jsts.io.GeoJSONWriter();
+        const geo = geoWriter.write(jgeom);
+        return { type: 'Feature', geometry: geo, properties: {} };
+    } catch (err) {
+        return null;
+    }
+}
+
+/**
+ * Calcula diferença entre duas features (B - A) de forma robusta
+ */
+export function safeDifferenceJSTS(featB: any, featA: any) {
+    try {
+        const jA = toJSTS(featA);
+        const jB = toJSTS(featB);
+        if (!jA || !jB) return null;
+        const diff = jB.difference ? jB.difference(jA) : (jB.geometry ? jB.geometry.difference(jA.geometry) : null);
+        if (!diff || diff.isEmpty()) return null;
+        return fromJSTS(diff);
+    } catch (err) {
+        return null;
+    }
+}
+
+/**
+ * Calcula diferença com múltiplas estratégias de fallback
+ */
+export function safeDifference(featB: any, featA: any) {
+    // Estratégia 1: Tentativa direta com JSTS
+    let result = safeDifferenceJSTS(featB, featA);
+    if (result) return result;
+
+    // Estratégia 2: Limpeza de geometrias e nova tentativa
+    const cleanA = cleanGeometry(featA);
+    const cleanB = cleanGeometry(featB);
+
+    result = safeDifferenceJSTS(cleanB, cleanA);
+    if (result) return result;
+
+    // Estratégia 3: Fragmentação em polígonos simples
+    const partsB = polygonsFromFeature(cleanB);
+    const partsA = polygonsFromFeature(cleanA);
+
+    const resultParts = [];
+
+    // Subtrai cada parte de A de cada parte de B sequencialmente
+    for (let i = 0; i < partsB.length; i++) {
+        let current = partsB[i];
+        for (let j = 0; j < partsA.length; j++) {
+            try {
+                const d = safeDifferenceJSTS(current, partsA[j]);
+                current = d || current;
+            } catch (err) {
+                // Ignora erros e continua com a geometria atual
+            }
+        }
+        // Extrai coordenadas da geometria resultante
+        if (current) {
+            if (current.geometry && current.geometry.type === 'Polygon') {
+                resultParts.push(current.geometry.coordinates);
+            } else if (current.geometry && current.geometry.type === 'MultiPolygon') {
+                resultParts.push(...current.geometry.coordinates);
+            }
+        }
+    }
+
+    if (!resultParts.length) return null;
+
+    // Reconstrói Feature com as partes resultantes
+    if (resultParts.length === 1) return polygon(resultParts[0]);
+    return multiPolygon(resultParts);
+}
+
+/**
+ * Calcula diferença garantindo um espaçamento mínimo entre geometrias
+ * Aplica um buffer na geometria menor antes de subtrair da maior
+ * @param featB - Feature maior (será cortada)
+ * @param featA - Feature menor (será mantida e expandida com buffer)
+ * @param gapMeters - Espaçamento mínimo em metros (padrão: 0.5m)
+ */
+export function safeDifferenceWithGap(featB: any, featA: any, gapMeters: number = 0.5) {
+    const turf_buffer = require('@turf/buffer').default;
+    
+    try {
+        // Aplica buffer positivo na geometria menor para criar espaçamento
+        const featAWithBuffer = turf_buffer(featA, gapMeters, { units: 'meters' });
+        
+        if (!featAWithBuffer) {
+            // Se falhar o buffer, usa diferença normal
+            return safeDifference(featB, featA);
+        }
+        
+        // Realiza a diferença com a geometria expandida
+        return safeDifference(featB, featAWithBuffer);
+    } catch (err) {
+        console.error('Erro ao aplicar buffer com espaçamento:', err);
+        // Em caso de erro, tenta diferença normal
+        return safeDifference(featB, featA);
+    }
+}
+
+/**
+ * Normaliza diferentes formatos de entrada GeoJSON
+ */
+export function normalizeGeoJSON(raw: any, id: string) {
+    if (!raw) return null;
+    let parsed;
+    try {
+        parsed = (typeof raw === 'string') ? JSON.parse(raw.replace(/\u0000/g, '').trim()) : raw;
+    } catch (e) {
+        return null;
+    }
+
+    // Se for FeatureCollection, extrai a primeira feature
+    if (parsed.type === 'FeatureCollection') {
+        if (!parsed.features || !parsed.features.length) return null;
+        parsed = parsed.features[0];
+    }
+
+    // Converte Geometry para Feature
+    if (parsed.type !== 'Feature') {
+        parsed = { type: 'Feature', geometry: parsed, properties: {} };
+    }
+
+    // Valida geometria e aceita apenas Polygon ou MultiPolygon
+    if (!parsed.geometry || !parsed.geometry.type) return null;
+    if (!['Polygon', 'MultiPolygon'].includes(parsed.geometry.type)) {
+        return null;
+    }
+
+    return parsed;
+}
+
+/**
+ * Verifica interseções entre geometrias
+ */
+export function detectIntersections(features: any[]) {
+    const intersections: any[] = [];
+    const seen = new Set<string>();
+
+    for (let i = 0; i < features.length; i++) {
+        const itemA = features[i];
+        if (!itemA.feature) continue;
+
+        for (let j = i + 1; j < features.length; j++) {
+            const itemB = features[j];
+            if (!itemB.feature) continue;
+
+            const key = `${itemA.id}-${itemB.id}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+
+            // Verifica se há interseção
+            let intersects = false;
+            try {
+                intersects = booleanIntersects(itemA.feature, itemB.feature);
+            } catch (err) {
+                // Ignora erros de geometria
+            }
+
+            if (intersects) {
+                intersections.push({
+                    car_contrato: itemA.id,
+                    identi_contrato: itemA.identi,
+                    car_conflito: itemB.id,
+                    identi_conflito: itemB.identi,
+                    geojson_conflito: JSON.stringify(itemB.feature.geometry),
+                    tipo: 'interno'
+                });
+            }
+        }
+    }
+
+    return intersections;
+}
+
+/**
+ * Detecta conflitos de interseção com CARs externos ao contrato
+ */
+export async function detectConflitosExternos(featuresContrato: any[], executeQuery: Function) {
+    const conflitosExternos: any[] = [];
+    const carsDoContrato = new Set(featuresContrato.map(f => f.id));
+
+    if (carsDoContrato.size === 0) return conflitosExternos;
+
+    // Buscar todos os CARs do banco que não fazem parte deste contrato
+    const sqlTodosCars = `SELECT DISTINCT 
+                            Z0C.Z0C_CAR AS car, 
+                            Z0C.Z0C_IDENTI AS identi,
+                            CASE 
+                                WHEN Z0C.Z0C_GEOCOR IS NOT NULL AND LTRIM(RTRIM(Z0C.Z0C_GEOCOR)) <> '' 
+                                THEN Z0C.Z0C_GEOCOR 
+                                ELSE Z0C.Z0C_GEOJSO 
+                            END AS geojson
+                          FROM Z0C010 Z0C
+                          WHERE Z0C.D_E_L_E_T_ <> '*'
+                          AND Z0C.Z0C_CAR NOT IN (${Array.from(carsDoContrato).map(c => `'${c}'`).join(',')})`;
+
+    const responseTodosCars = await executeQuery(sqlTodosCars, {});
+
+    const intersectionArea = require('@turf/intersect').default;
+
+    // Processar CARs externos e verificar interseções
+    for (const carExterno of responseTodosCars.recordset) {
+        const featExterno = normalizeGeoJSON(carExterno.geojson, carExterno.car);
+        if (!featExterno) continue;
+
+        // Verificar interseção com cada CAR do contrato
+        for (const carContrato of featuresContrato) {
+            let intersects = false;
+            let areaIntersecao = 0;
+            
+            try {
+                intersects = booleanIntersects(carContrato.feature, featExterno);
+                
+                // Se houver interseção, calcular a área
+                if (intersects) {
+                    const intersection = intersectionArea(carContrato.feature, featExterno);
+                    if (intersection) {
+                        areaIntersecao = area(intersection);
+                    }
+                }
+            } catch (err) {
+                // Ignora erros
+            }
+
+            if (intersects) {
+                conflitosExternos.push({
+                    car_contrato: carContrato.id,
+                    identi_contrato: carContrato.identi,
+                    car_conflito: carExterno.car,
+                    identi_conflito: carExterno.identi,
+                    geojson_conflito: JSON.stringify(featExterno.geometry),
+                    tipo: 'externo'
+                });
+            }
+        }
+    }
+
+    return conflitosExternos;
+}
 
 //==================================================================================================================
 //==================================================================================================================
