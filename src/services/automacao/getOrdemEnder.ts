@@ -1,7 +1,26 @@
 import Retorno from "../../models/automacao/Retorno";
 import WMS_ItemOSDTO from "../../models/automacao/WMS_ItemOSDTO";
-import WMS_RuaDTO from "../../models/automacao/WMS_RuaDTO";
 import { executeQueryLocal, getWMS_OPMoega } from "../../utils/dbExecute";
+
+// Função helper para debug: substitui os parâmetros no SQL
+function debugSQL(sql: string, params: any): string {
+    let debugQuery = sql;
+    for (const [key, value] of Object.entries(params)) {
+        const paramName = `@${key}`;
+        if (debugQuery.includes(paramName)) {
+            let replacement: string;
+            if (typeof value === 'string') {
+                replacement = `'${value}'`;
+            } else if (value === null || value === undefined) {
+                replacement = 'NULL';
+            } else {
+                replacement = String(value);
+            }
+            debugQuery = debugQuery.replace(new RegExp(paramName, 'g'), replacement);
+        }
+    }
+    return debugQuery;
+}
 
 export async function getOrdemEnder (params: any) {
     if(!params.salto || params.salto.trim().length === 0) {
@@ -91,6 +110,10 @@ export async function getOrdemEnder (params: any) {
     sql += ` OFFSET @salto ROWS FETCH NEXT @regPPagina ROWS ONLY`;
 
     try {
+        console.log("SQL Original: ", sql);
+        console.log("Parâmetros: ", params);
+        console.log("SQL com Parâmetros: ", debugSQL(sql, params));
+        
         const response = await executeQueryLocal(sql, params);
 
         const listObjOrdem: WMS_ItemOSDTO[] = await Promise.all (

@@ -32,6 +32,7 @@ import { getZ1AJustifRoutes } from "./routes/automacao/getZ1AJustifRoutes"
 import { getCordCorRoutes } from "./routes/automacao/getCordCorRoutes"
 import { setCordCorRoutes } from "./routes/automacao/setCordCorRoutes"
 import { getSiloWMSSUPRoutes } from "./routes/automacao/getSiloWMSSUP"
+import { getProdDataRoutes } from "./routes/automacao/getProdDataRoutes"
 
 import { app } from "./server"
 
@@ -70,4 +71,5 @@ export const routes = async () => {
     app.register(getCordCorRoutes);
     app.register(setCordCorRoutes);
     app.register(getSiloWMSSUPRoutes);
+    app.register(getProdDataRoutes);
 }
