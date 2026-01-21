@@ -641,7 +641,7 @@ export async function getMovSiloID() {
     return max.recordset[0].MAX.toString();
 }
 
-export async function getDataAtual(comHora: boolean = false): Promise<string> {
+export async function getDataAtual(comHora: boolean = false, ): Promise<string> {
     const hoje = new Date();
 
     const dia = String(hoje.getDate()).padStart(2, "0");
@@ -1202,6 +1202,46 @@ export async function detectConflitosExternos(featuresContrato: any[], executeQu
     }
 
     return conflitosExternos;
+}
+
+export async function delWMSOS(wms: WMS_OSDTO): Promise<Retorno> {
+    const sql = `DELETE FROM WMS_OS WHERE OSID = @OSID`;
+    
+    const params = {
+        OSID: wms.oSID
+    };
+
+    try {
+        await executeQueryLocal(sql, params);
+        
+        return new Retorno({
+            code: 600,
+            type: "OK",
+            message: "OS deletada com sucesso!",
+            data: wms.oSID
+        });
+    } catch (error) {
+        console.error("Erro ao deletar WMS_OS:", error);
+        return new Retorno({
+            code: 500,
+            type: "Error",
+            message: "Erro ao deletar OS, contate o administrador",
+            data: ""
+        });
+    }
+}
+
+export async function existItemOsAbertoLote(_TagBag: string, _OSID: string): Promise<boolean>
+{
+    const sql = `SELECT COUNT(*) FROM WMS_ItemOS WHERE ItOSStatus = 'AB' AND ItOsTagBag = @_TagBag AND OSID <> @_OSID`;
+
+    try {
+        const response = await executeQueryLocal(sql, {_TagBag, _OSID});
+        return response.recordset.length > 0;
+
+    } catch (error) {
+        throw new Error(`Erro no existItemOsAbertoLote: ${error}`);
+    }
 }
 
 //==================================================================================================================

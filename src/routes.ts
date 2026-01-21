@@ -33,6 +33,10 @@ import { getCordCorRoutes } from "./routes/automacao/getCordCorRoutes"
 import { setCordCorRoutes } from "./routes/automacao/setCordCorRoutes"
 import { getSiloWMSSUPRoutes } from "./routes/automacao/getSiloWMSSUP"
 import { getProdDataRoutes } from "./routes/automacao/getProdDataRoutes"
+import { getBagEnderRoutes } from "./routes/automacao/getBagEnderRoutes"
+import { getProdProtheusXWMSRoutes } from "./routes/automacao/getProdProtheusXWMSRoutes"
+import { getBagPosRoutes } from "./routes/automacao/getBagPosRoutes"
+import { getCheckOpRoutes } from "./routes/automacao/getCheckOpRoutes"
 
 import { app } from "./server"
 
@@ -72,4 +76,8 @@ export const routes = async () => {
     app.register(setCordCorRoutes);
     app.register(getSiloWMSSUPRoutes);
     app.register(getProdDataRoutes);
+    app.register(getBagEnderRoutes);
+    app.register(getProdProtheusXWMSRoutes);
+    app.register(getBagPosRoutes);
+    app.register(getCheckOpRoutes);
 }
